@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | School App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-blue-600 p-4 text-white flex justify-between items-center">
+    <h1 class="font-bold">School Admin Dashboard</h1>
+    <button onclick="logout()" class="bg-red-500 hover:bg-red-700 px-3 py-1 rounded">
+        Logout
+    </button>
+</nav>
+
+    <div class="p-8">
+        <div class="bg-white p-6 rounded shadow text-center">
+            <h2 id="adminName" class="text-3xl font-bold text-blue-600 mb-2">Welcome Back!</h2>
+            <p id="profileDetail" class="text-gray-500 italic">Loading profile...</p>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
+

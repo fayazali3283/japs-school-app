@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Dashboard</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' }
+</script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white dark:bg-gray-800 shadow-lg p-6 hidden md:block">
+    <h2 class="text-2xl font-bold mb-8">School Dashboard</h2>
+    <nav class="space-y-4">
+      <a href="#dashboard" class="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Dashboard</a>
+      <a href="#students" class="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Students</a>
+      <a href="#profile" class="block px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Profile</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Dashboard</h1>
+      <button id="dark-toggle" class="px-4 py-2 bg-gray-800 dark:bg-white dark:text-gray-900 text-white rounded-lg hover:opacity-90 transition-opacity">
+        Toggle Dark Mode
+      </button>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow">
+        <h3 class="text-lg font-semibold mb-2">Total Students</h3>
+        <p id="total-students" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow">
+        <h3 class="text-lg font-semibold mb-2">Classes</h3>
+        <p class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow">
+        <h3 class="text-lg font-semibold mb-2">Teachers</h3>
+        <p class="text-2xl font-bold">0</p>
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    <section id="students" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow mb-8">
+      <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Students List</h2>
+      <table class="w-full table-auto">
+        <thead>
+          <tr class="bg-gray-100 dark:bg-gray-700">
+            <th class="px-4 py-2 text-left">Name</th>
+            <th class="px-4 py-2 text-left">Class</th>
+            <th class="px-4 py-2 text-left">Added At</th>
+          </tr>
+        </thead>
+        <tbody id="students-list"></tbody>
+      </table>
+    </section>
+
+    <!-- Add Student Form -->
+    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl transition-shadow">
+      <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Add Student</h2>
+      <div class="flex flex-col md:flex-row gap-3 mb-3">
+        <input id="student-name" placeholder="Student Name" class="border rounded-lg p-3 flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input id="student-class" placeholder="Class" class="border rounded-lg p-3 flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <button id="add-student" class="bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors w-full md:w-auto">
+        Add Student
+      </button>
+      <p id="add-result" class="mt-2 text-green-600 font-medium"></p>
+    </section>
+
+  </main>
+</div>
+
+<!-- Scripts -->
+<script type="module">
+  // Dark mode toggle with localStorage
+  const darkToggle = document.getElementById("dark-toggle");
+  if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+
+  darkToggle.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+  });
+
+  // Firebase example: Add and list students
+  import { db, collection, addDoc, onSnapshot } from "./firebase.js";
+
+  const studentsList = document.getElementById("students-list");
+  const addBtn = document.getElementById("add-student");
+  const totalStudentsEl = document.getElementById("total-students");
+
+  const studentsCol = collection(db, "students");
+  onSnapshot(studentsCol, (snapshot) => {
+    studentsList.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const tr = document.createElement("tr");
+      tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700";
+      tr.innerHTML = `
+        <td class="border px-4 py-2">${data.name}</td>
+        <td class="border px-4 py-2">${data.class}</td>
+        <td class="border px-4 py-2">${data.createdAt ? new Date(data.createdAt.seconds*1000).toLocaleString() : ''}</td>
+      `;
+      studentsList.appendChild(tr);
+    });
+    totalStudentsEl.innerText = snapshot.size;
+  });
+
+  addBtn.addEventListener("click", async () => {
+    const name = document.getElementById("student-name").value;
+    const studentClass = document.getElementById("student-class").value;
+    if (!name || !studentClass) return alert("Enter name and class");
+    await addDoc(studentsCol, { name, class: studentClass, createdAt: new Date() });
+    document.getElementById("add-result").innerText = "Student added successfully!";
+  });
+</script>
+
+</body>
+</html>
